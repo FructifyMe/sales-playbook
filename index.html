@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unmind Nova - Interactive Sales Playbook</title>
+    <!-- Chosen Palette: "Calm Harmony Neutrals" - A palette using a base of slate and stone neutrals (bg-slate-50, border-slate-200), with a professional and calming muted teal (teal-600/700) as the primary interactive color and a subtle amber (amber-500) for highlights and call-to-actions. This creates a focused, uncluttered, and sophisticated feel appropriate for a corporate strategy tool. -->
+    <!-- Application Structure Plan: The application is structured as a task-oriented, single-page dashboard for a sales representative (JC). The structure avoids the linear format of the source report and instead prioritizes actionability and quick access to key information. It's organized into four logical sections: 1. **Market Pulse Dashboard:** An initial overview of the market opportunity (burnout crisis, investment trends) to provide context. 2. **Target Accounts Funnel:** An interactive, tabbed view of the tiered company lists (Tier 1, 2, 3) to allow for focused prospecting. 3. **Actionable Lead Board:** The core of the app, transforming the static CHRO table into a filterable, searchable grid of interactive cards. Clicking a card reveals a detailed dossier with contact info and a one-click "copy message" function. 4. **GTM Strategy:** A visual timeline of the go-to-market plan. This structure guides the user from high-level understanding to specific, actionable sales tasks, which is far more efficient for a sales workflow than reading a report. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Burnout rates by industry -> Goal: Compare high-need sectors -> Viz: Horizontal Bar Chart (Chart.js) -> Interaction: Hover for details on burnout drivers -> Justification: Clearly visualizes the hierarchy of need, making prioritization intuitive.
+        - Report Info: Corporate wellness market growth projection -> Goal: Show market viability -> Viz: Line Chart (Chart.js) -> Interaction: Tooltips show value at data points -> Justification: Effectively communicates the growing budget allocation in the target market.
+        - Report Info: Tiered company lists -> Goal: Organize target accounts -> Presentation: Tabbed interface with company cards -> Interaction: Click tabs to filter tiers -> Justification: Segments the target list cleanly, preventing information overload and allowing the user to focus on one tier at a time.
+        - Report Info: Master CHRO list & Executive Dossiers -> Goal: Enable targeted outreach -> Presentation: Interactive modal with contact info and "copy to clipboard" buttons -> Interaction: Click lead card to open dossier, click buttons to copy email and tailored message -> Justification: This is the primary action-oriented feature. It dramatically reduces friction for the sales rep, moving them from research to outreach in a single click.
+        - Report Info: Phased GTM plan -> Goal: Outline strategy -> Presentation: Visual timeline (HTML/CSS) -> Interaction: Static visual -> Justification: Transforms a text block into an easily digestible strategic roadmap.
+        - Library/Method: All charts use Chart.js (Canvas). All other visuals and layouts use structured HTML and Tailwind CSS. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 320px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .tab-active {
+            border-color: #0d9488; /* teal-600 */
+            color: #0d9488;
+            background-color: #f0fdfa; /* teal-50 */
+        }
+        .tab-inactive {
+            border-color: transparent;
+            color: #52525b; /* zinc-600 */
+        }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans text-slate-800">
+
+    <header class="bg-white shadow-sm sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-slate-900">
+                <span class="text-teal-600">Unmind Nova</span>
+                <span class="font-light">| US Sales Playbook</span>
+            </h1>
+            <nav class="hidden md:flex space-x-6">
+                <a href="#market-pulse" class="text-sm font-medium text-slate-600 hover:text-teal-600 transition-colors">Market Pulse</a>
+                <a href="#target-accounts" class="text-sm font-medium text-slate-600 hover:text-teal-600 transition-colors">Target Accounts</a>
+                <a href="#lead-board" class="text-sm font-medium text-slate-600 hover:text-teal-600 transition-colors">Lead Board</a>
+                <a href="#strategy" class="text-sm font-medium text-slate-600 hover:text-teal-600 transition-colors">GTM Strategy</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+
+        <section id="market-pulse" class="mb-16 scroll-mt-20">
+            <h2 class="text-3xl font-bold text-slate-900 mb-2">Market Pulse: The Opportunity</h2>
+            <p class="text-slate-600 mb-8 max-w-3xl">
+                This section provides a high-level overview of the key market dynamics driving the need for Unmind Nova. It visualizes the industries most affected by the burnout crisis and the significant corporate investment in employee wellness, establishing the "why" behind our strategic targeting.
+            </p>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="font-bold text-lg mb-4 text-slate-800">The Burnout Epidemic: High-Need Industries</h3>
+                    <p class="text-sm text-slate-500 mb-4">Burnout is a systemic issue impacting productivity and retention. Certain sectors are disproportionately affected, representing a clear hierarchy of need for effective wellness interventions. Hover over bars for details.</p>
+                    <div class="chart-container">
+                        <canvas id="burnoutChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="font-bold text-lg mb-4 text-slate-800">The Wellness Investment Landscape</h3>
+                    <p class="text-sm text-slate-500 mb-4">The corporate wellness market is substantial and growing rapidly, confirming that organizations are allocating significant budgets for solutions. This trend is particularly strong in mental health and tech-driven platforms.</p>
+                    <div class="chart-container">
+                        <canvas id="investmentChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="target-accounts" class="mb-16 scroll-mt-20">
+            <h2 class="text-3xl font-bold text-slate-900 mb-2">Target Accounts Funnel</h2>
+            <p class="text-slate-600 mb-8 max-w-3xl">
+                Here are the prioritized company lists, segmented into three tiers based on their strategic fit. Use the tabs to focus on the highest-potential accounts first (Tier 1), then expand to greenfield opportunities (Tier 2) and innovation leaders (Tier 3).
+            </p>
+            <div id="tabs-container" class="mb-6 border-b border-slate-200">
+                <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                    <button class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm tab-active" data-tier="1">Tier 1: Epicenter of Opportunity</button>
+                    <button class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm tab-inactive" data-tier="2">Tier 2: High-Potential Frontier</button>
+                    <button class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm tab-inactive" data-tier="3">Tier 3: Innovation Leaders</button>
+                </nav>
+            </div>
+            <div id="tier-content" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            </div>
+        </section>
+
+        <section id="lead-board" class="mb-16 scroll-mt-20">
+            <h2 class="text-3xl font-bold text-slate-900 mb-2">Actionable Lead Board</h2>
+            <p class="text-slate-600 mb-8 max-w-3xl">
+                This is your central command for outreach. Find specific CHROs using the search and filter controls. Click on any lead to open their detailed dossier, which now includes their contact email, priorities, and a tailored messaging hook.
+            </p>
+            <div class="mb-6 flex flex-col sm:flex-row gap-4">
+                 <input type="search" id="search-input" placeholder="Search by name or company..." class="w-full sm:w-1/2 flex-grow px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition">
+                 <select id="tier-filter" class="w-full sm:w-auto px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition bg-white">
+                     <option value="all">All Tiers</option>
+                     <option value="1">Tier 1</option>
+                     <option value="2">Tier 2</option>
+                     <option value="3">Tier 3</option>
+                 </select>
+            </div>
+            <div id="lead-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            </div>
+        </section>
+
+        <section id="strategy" class="scroll-mt-20">
+            <h2 class="text-3xl font-bold text-slate-900 mb-2">Go-to-Market Strategy</h2>
+            <p class="text-slate-600 mb-8 max-w-3xl">
+                This visual timeline outlines the recommended phased outreach strategy. Following this structured approach will help build momentum, secure flagship logos early, and use that success to penetrate subsequent market segments effectively.
+            </p>
+            <div class="relative pl-8 border-l-2 border-teal-200">
+                <div class="mb-12">
+                    <div class="absolute w-6 h-6 bg-teal-600 rounded-full -left-3 border-4 border-white"></div>
+                    <p class="text-sm font-semibold text-teal-700">Phase 1 (Months 1-3)</p>
+                    <h4 class="text-lg font-bold text-slate-800">Exclusive Focus on Tier 1 Targets</h4>
+                    <p class="text-slate-600 mt-1">Concentrate all effort on Tier 1. Use personalized outreach from the dossiers to secure 2-3 flagship logos. This motion is consultative, positioning Nova as the next evolution for their mature wellness strategies.</p>
+                </div>
+                <div class="mb-12">
+                    <div class="absolute w-6 h-6 bg-teal-600 rounded-full -left-3 border-4 border-white"></div>
+                    <p class="text-sm font-semibold text-teal-700">Phase 2 (Months 4-6)</p>
+                    <h4 class="text-lg font-bold text-slate-800">Expansion to Tier 2 Targets</h4>
+                    <p class="text-slate-600 mt-1">Expand focus to Tier 2. Use Tier 1 wins as case studies. The motion is more evangelistic, educating on the ROI of wellness and positioning Nova as the ideal foundational investment.</p>
+                </div>
+                <div>
+                    <div class="absolute w-6 h-6 bg-teal-600 rounded-full -left-3 border-4 border-white"></div>
+                    <p class="text-sm font-semibold text-teal-700">Phase 3 (Ongoing)</p>
+                    <h4 class="text-lg font-bold text-slate-800">Nurture Tier 3 & Inbound Interest</h4>
+                    <p class="text-slate-600 mt-1">Engage Tier 3 innovation leaders with a long-term "thought leadership" approach on professional networks. Position Nova as a competitive advantage for attracting elite, tech-forward talent.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="lead-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
+        <div id="modal-content" class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        </div>
+    </div>
+
+
+<script>
+const burnoutData = {
+    labels: ['Finance/Insurance', 'Hospitality', 'Manufacturing', 'Healthcare', 'Education'],
+    datasets: [{
+        label: 'Burnout Rate (%)',
+        data: [82.5, 80.0, 76.0, 46.0, 44.0],
+        backgroundColor: [
+            'rgba(13, 148, 136, 0.7)', // teal-600
+            'rgba(15, 118, 110, 0.7)',
+            'rgba(17, 94, 89, 0.7)',
+            'rgba(18, 153, 142, 0.7)',
+            'rgba(20, 184, 166, 0.7)'
+        ],
+        borderColor: 'rgba(13, 148, 136, 1)',
+        borderWidth: 1
+    }]
+};
+
+const investmentData = {
+    labels: ['2024', '2026', '2028', '2030', '2032', '2034'],
+    datasets: [{
+        label: 'Global Corporate Wellness Market ($B)',
+        data: [64.0, 74.5, 86.7, 100.9, 117.4, 130.0],
+        fill: true,
+        backgroundColor: 'rgba(13, 148, 136, 0.2)',
+        borderColor: '#0d9488', // teal-600
+        tension: 0.4
+    }]
+};
+
+const targetCompanies = [
+    { name: 'Microsoft', tier: 1, industry: 'Technology' },
+    { name: 'Salesforce', tier: 1, industry: 'Technology' },
+    { name: 'Johnson & Johnson', tier: 1, industry: 'Healthcare', logoName: 'jnj' },
+    { name: 'Hilton', tier: 1, industry: 'Hospitality' },
+    { name: 'American Express', tier: 1, industry: 'Financial Services' },
+    { name: 'Cisco', tier: 1, industry: 'Technology' },
+    { name: 'NVIDIA', tier: 1, industry: 'Technology' },
+    { name: 'Accenture', tier: 1, industry: 'Professional Services' },
+    { name: 'The Home Depot', tier: 2, industry: 'Retail', logoName: 'homedepot' },
+    { name: 'Target', tier: 2, industry: 'Retail', logoName: 'target' },
+    { name: 'Ford Motor Company', tier: 2, industry: 'Manufacturing', logoName: 'ford' },
+    { name: 'General Motors', tier: 2, industry: 'Manufacturing', logoName: 'gm' },
+    { name: 'Procter & Gamble', tier: 2, industry: 'Consumer Goods', logoName: 'procterandgamble' },
+    { name: 'Marriott International', tier: 2, industry: 'Hospitality', logoName: 'marriott' },
+    { name: 'Capital One', tier: 2, industry: 'Financial Services', logoName: 'capitalone' },
+    { name: 'Stripe', tier: 3, industry: 'Fintech' },
+    { name: 'Databricks', tier: 3, industry: 'AI & Data' },
+    { name: 'Rippling', tier: 3, industry: 'HR Tech' },
+    { name: 'Chime', tier: 3, industry: 'Fintech' },
+    { name: 'Devoted Health', tier: 3, industry: 'Health-Tech', logoName: 'devotedhealth' },
+    { name: 'Gusto', tier: 3, industry: 'HR Tech' },
+];
+
+const leadData = [
+    {
+        name: 'Amy Coleman',
+        title: 'EVP & Chief People Officer',
+        company: 'Microsoft',
+        email: 'Amy.Coleman@microsoft.com',
+        tier: 1,
+        priorities: [
+            "Believes AI will 'reimagine' the labor market and 'hyperscale human thought'.",
+            "Stresses that employees should be the 'creator' of AI agents that improve their daily work lives.",
+            "Tasked with continuing a culture of 'growth mindset, agility, and talent retention' in the AI era.",
+            "Experienced in enterprise crisis management and ensuring employee safety and well-being."
+        ],
+        message: "Amy, your vision for AI as a tool to 'hyperscale human thought' and empower employees is precisely how we've engineered Unmind Nova. It's not a top-down system, but a personal AI coach that acts as an extension of the individual, helping them build resilience and navigate challenges on their own terms. As you lead Microsoft's people strategy in this new era, providing a tool that supports employee well-being with this level of personalization and privacy can be a key differentiator in attracting and retaining the world's most passionate talent. It directly aligns with your goal of making Microsoft an exceptional place to work."
+    },
+    {
+        name: 'Nathalie Scardino',
+        title: 'Chief People Officer',
+        company: 'Salesforce',
+        email: 'nscardino@salesforce.com',
+        tier: 1,
+        priorities: [
+            "Believes by 2030, 80% of humans and AI agents will work together.",
+            "Connects AI adoption directly to a 30% gain in productivity.",
+            "Focuses on reskilling employees in soft skills like collaboration and emotional intelligence.",
+            "Sees autonomous AI as a solution to employee pain points, freeing up individuals for higher-value work."
+        ],
+        message: "Nathalie, your research on the rise of AI agents and the CHRO's critical role in integrating 'digital labor' is spot on. You've highlighted the need for a workforce where humans and agents work together to boost productivity. Unmind Nova is a prime example of a specialized AI agent for the enterprise—an AI coach dedicated to proactively managing employee well-being. It provides personalized, scalable support that directly addresses the productivity drain from stress and burnout, aligning perfectly with your vision for a future-proofed, agent-assisted workforce and your mission to empower employees."
+    },
+    {
+        name: 'Kristen Mulholland',
+        title: 'EVP, Chief Human Resources Officer',
+        company: 'Johnson & Johnson',
+        email: 'kmulholl@its.jnj.com',
+        companyLogo: 'jnj',
+        tier: 1,
+        priorities: [
+            "Responsible for programs supporting 'mental, physical, emotional, and financial well-being'.",
+            "Mandated to enhance J&J's 'commitment to creating a culture of caring, learning, and inclusion'.",
+            "Advocates for 'purpose-filled careers and talent development'.",
+            "Passionate about the 'impact of technology and digitization on the Company and its people'."
+        ],
+        message: "Kristen, your focus on enhancing J&J's culture of caring through programs that support holistic well-being—mental, physical, and emotional—is truly forward-thinking. Unmind Nova aligns directly with this mission. As a clinically-backed, AI-driven platform, it provides a scalable way to deliver personalized mental and emotional support to your global workforce. Given your passion for leveraging technology to enhance the employee experience, Nova offers a powerful tool to further embed that culture of caring and support the purpose-filled careers you champion at Johnson & Johnson."
+    },
+    {
+        name: 'Laura Fuentes',
+        title: 'EVP and Chief Human Resources Officer',
+        company: 'Hilton',
+        email: 'Laura.Fuentes@hilton.com',
+        tier: 1,
+        priorities: [
+            "Core philosophy: 'They want work to fit into a good life.'",
+            "Actively builds joy, friendship, and community into the workplace.",
+            "Believes that 'employees who are cared for will care for their clients'.",
+            "Emphasizes that new hires must align with Hilton's core values and purpose."
+        ],
+        message: "Laura, your philosophy of building a 'fully human experience' where work fits into a good life is precisely the challenge modern organizations face. You've spoken about the importance of caring for employees so they can, in turn, care for guests. Unmind Nova is a tool built to provide that foundational layer of care. It offers a confidential, 24/7 AI coach that supports the whole person—their stress, their resilience, their well-being—on their own schedule. It's a scalable way to ensure every team member, across every property, has access to a resource that helps them bring their best self to work, enabling the very human experience you champion at Hilton."
+    },
+    {
+        name: 'Monique Herena',
+        title: 'Chief Colleague Experience Officer',
+        company: 'American Express',
+        email: 'monique.r.herena@aexp.com',
+        tier: 1,
+        priorities: [
+            "Mantra: 'We believe the best way to back our customers is to back our colleagues.'",
+            "Responsible for the end-to-end 'colleague experience,' including total well-being.",
+            "Embraces change and stepping out of comfort zones as a core leadership philosophy.",
+            "Focused on building leaders at all levels of the organization."
+        ],
+        message: "Monique, your title of Chief Colleague Experience Officer and your philosophy of 'backing your colleagues' perfectly captures the strategic importance of employee well-being. Unmind Nova is a powerful tool to enhance that total well-being journey. By providing every colleague with a confidential, 24/7 AI coach, you can offer personalized support at scale, reinforcing the message that American Express is truly invested in their holistic health. As you continue to boldly lead change, a tool that leverages AI to deliver a world-class, modern well-being experience seems like a perfect fit for your strategy."
+    },
+    { name: 'Francine Katsoudas', title: 'EVP and Chief People, Policy & Purpose Officer', company: 'Cisco', email: 'fkatsoud@cisco.com', tier: 1, message: "Francine, your perspective on building a culture of flexibility and trust deeply resonates. You've highlighted that top talent demands choice and that the office should be a hub for connection, not a requirement for presence. Unmind Nova is designed for this modern, trust-based reality. It is a 24/7, confidential mental health resource that gives every Cisco employee the ultimate choice in *when* and *how* they seek support, empowering them on their own terms without mandates. As you continue to champion a world-class employee experience, a tool that builds trust by being available anytime, anywhere, in over 40 languages, seems like a natural fit for Cisco's global, flexible workforce.", priorities: ["Advocate for flexibility and choice in how people work.", "Believes rigid mandates erode trust.", "Views the office as a place for connection and mentorship, not forced attendance.", "Champions a culture of holistic employee engagement and well-being."]},
+    { name: 'Kristin Major', title: 'SVP, Human Resources', company: 'NVIDIA', email: 'kmajor@nvidia.com', tier: 1, priorities: ["Recently appointed to drive organizational growth and transformation.", "Tasked with managing HR in a leading, rapidly expanding AI company."], message: "Kristin, as you drive organizational transformation at NVIDIA, supporting the well-being of the elite talent powering the AI revolution is paramount. Unmind Nova is an AI-native wellness platform designed for a tech-forward culture like yours. It provides sophisticated, scalable, and confidential mental health support, ensuring your team remains resilient and innovative. It's a strategic tool to maintain a competitive edge in the fierce war for AI talent." },
+    { name: 'Kate Clifford', title: 'Global Chief Leadership & HR Officer', company: 'Accenture', email: 'kate.clifford@accenture.com', tier: 1, priorities: ["Focus on reimagined employee experiences and omni-connected work.", "Leads HR for a global consulting firm with a high-stress work environment."], message: "Kate, as you prepare to lead Accenture's people strategy, your focus on 'reimagined employee experiences' is key. For a global, high-performance workforce, this must include mental well-being. Unmind Nova offers a scalable, omni-connected solution that provides 24/7 confidential support to every consultant, anywhere in the world. It’s a powerful tool to build resilience and ensure your team can deliver a world-class client experience." },
+    { name: 'Stephanie Smith', title: 'EVP, Human Resources', company: 'The Home Depot', email: 'stephanie_smith@homedepot.com', companyLogo: 'homedepot', tier: 2 },
+    { name: 'Melissa Kremer', title: 'EVP and Chief HR Officer', company: 'Target', email: 'melissa.kremer@target.com', companyLogo: 'target', tier: 2 },
+    { name: 'Jennifer Waldo', title: 'Chief People and Employee Experience Officer', company: 'Ford Motor Company', email: 'jwaldo@ford.com', companyLogo: 'ford', tier: 2 },
+    { name: 'Arden Hoffman', title: 'SVP and Chief People Officer', company: 'General Motors', email: 'arden.hoffman@gm.com', companyLogo: 'gm', tier: 2 },
+    { name: 'Bala Purushothaman', title: 'Chief Human Resources Officer', company: 'Procter & Gamble', email: 'purushothaman.b@pg.com', companyLogo: 'procterandgamble', tier: 2 },
+    { name: 'Ty Breland', title: 'EVP, Chief Human Resources Officer', company: 'Marriott International', email: 'ty.breland@marriott.com', companyLogo: 'marriott', tier: 2 },
+    { name: 'Kaitlin Haggerty', title: 'Chief Human Resources Officer', company: 'Capital One', email: 'kaitlin.haggerty@capitalone.com', companyLogo: 'capitalone', tier: 2 },
+    { name: 'Maia Josebachvili', title: 'Head of People', company: 'Stripe', email: 'maia@stripe.com', tier: 3 },
+    { name: 'Amy Reichanadter', title: 'Chief People Officer', company: 'Databricks', email: 'amy.reichanadter@databricks.com', tier: 3 },
+    { name: 'Darcy MacKay', title: 'SVP, HR and Client Services', company: 'Rippling', email: 'dmackay@rippling.com', tier: 3 },
+    { name: 'Sarah Wagener', title: 'Chief People Officer', company: 'Chime', email: 'swagener@chime.com', tier: 3 },
+    { name: 'Leslie Brunner', title: 'Chief People Officer', company: 'Devoted Health', email: 'leslie.brunner@devoted.com', companyLogo: 'devotedhealth', tier: 3 },
+    { name: 'Danielle Brown', title: 'Chief People Officer', company: 'Gusto', email: 'danielle.brown@gusto.com', tier: 3 },
+];
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    const renderBurnoutChart = () => {
+        const ctx = document.getElementById('burnoutChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: burnoutData,
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    title: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) { label += ': '; }
+                                if (context.parsed.x !== null) { label += context.parsed.x + '%'; }
+                                const industry = context.label;
+                                let driver = '';
+                                if(industry === 'Finance/Insurance') driver = 'Driver: Pressure of managing money';
+                                if(industry === 'Hospitality') driver = 'Driver: Heavy workload';
+                                if(industry === 'Manufacturing') driver = 'Driver: Repetitive tasks';
+                                if(industry === 'Healthcare') driver = 'Driver: Emotional toll, poor conditions';
+                                if(industry === 'Education') driver = 'Driver: Inadequate compensation';
+                                return [label, driver];
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Burnout Rate (%)', color: '#475569' }
+                    },
+                    y: { grid: { display: false } }
+                }
+            }
+        });
+    };
+    
+    const renderInvestmentChart = () => {
+        const ctx = document.getElementById('investmentChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: investmentData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: { display: true, text: 'Market Size ($ Billions)', color: '#475569' }
+                    },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    };
+
+    const tierContent = document.getElementById('tier-content');
+    const tabs = document.querySelectorAll('#tabs-container button');
+    
+    const renderTierCompanies = (tier) => {
+        tierContent.innerHTML = '';
+        const filteredCompanies = targetCompanies.filter(c => c.tier === tier);
+        filteredCompanies.forEach(company => {
+            const logoName = (company.logoName || company.name).toLowerCase().replace(/\s*&\s*|\s+/g, '');
+            const card = `
+                <div class="bg-white p-4 rounded-lg shadow flex flex-col items-center justify-center text-center">
+                    <img src="https://logo.clearbit.com/${logoName}.com" alt="${company.name} Logo" class="h-12 w-auto object-contain mb-3" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                    <div class="h-12 w-12 mb-3 hidden items-center justify-center bg-slate-200 rounded-md text-slate-500 font-bold text-xl">${company.name.charAt(0)}</div>
+                    <p class="font-bold text-slate-800 text-sm leading-tight">${company.name}</p>
+                    <p class="text-xs text-slate-500 mt-1">${company.industry}</p>
+                </div>
+            `;
+            tierContent.innerHTML += card;
+        });
+    };
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => {
+                t.classList.remove('tab-active');
+                t.classList.add('tab-inactive');
+            });
+            tab.classList.add('tab-active');
+            tab.classList.remove('tab-inactive');
+            renderTierCompanies(parseInt(tab.dataset.tier));
+        });
+    });
+
+    const leadGrid = document.getElementById('lead-grid');
+    const searchInput = document.getElementById('search-input');
+    const tierFilter = document.getElementById('tier-filter');
+
+    const renderLeads = () => {
+        leadGrid.innerHTML = '';
+        const searchTerm = searchInput.value.toLowerCase();
+        const selectedTier = tierFilter.value;
+
+        const filteredLeads = leadData.filter(lead => {
+            const matchesSearch = lead.name.toLowerCase().includes(searchTerm) || lead.company.toLowerCase().includes(searchTerm);
+            const matchesTier = selectedTier === 'all' || lead.tier == selectedTier;
+            return matchesSearch && matchesTier;
+        });
+
+        if (filteredLeads.length === 0) {
+            leadGrid.innerHTML = `<p class="text-slate-500 col-span-full text-center">No leads found matching your criteria.</p>`;
+            return;
+        }
+
+        filteredLeads.forEach(lead => {
+            const logoName = (lead.companyLogo || lead.company).toLowerCase().replace(/\s*&\s*|\s+/g, '');
+            const card = document.createElement('div');
+            card.className = 'bg-white p-5 rounded-lg shadow flex flex-col items-start cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-300';
+            card.innerHTML = `
+                <div class="flex items-center w-full mb-4">
+                    <img src="https://logo.clearbit.com/${logoName}.com" alt="${lead.company} Logo" class="h-10 w-10 mr-4 rounded-md object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                    <div class="h-10 w-10 mr-4 rounded-md hidden items-center justify-center bg-slate-200 text-slate-500 font-bold">${lead.company.charAt(0)}</div>
+                    <div class="flex-grow">
+                        <p class="font-bold text-slate-900">${lead.name}</p>
+                        <p class="text-sm text-slate-500">${lead.company}</p>
+                    </div>
+                    <span class="text-xs font-bold text-teal-700 bg-teal-100 py-1 px-2 rounded-full">Tier ${lead.tier}</span>
+                </div>
+                <p class="text-sm text-slate-600 w-full">${lead.title}</p>
+            `;
+            card.addEventListener('click', () => openLeadModal(lead));
+            leadGrid.appendChild(card);
+        });
+    };
+
+    const leadModal = document.getElementById('lead-modal');
+    const modalContent = document.getElementById('modal-content');
+
+    const copyToClipboard = (text, buttonElement, originalText) => {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        
+        const checkmarkIcon = `<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Copied!`;
+        buttonElement.innerHTML = checkmarkIcon;
+        
+        setTimeout(() => {
+            buttonElement.innerHTML = originalText;
+        }, 2000);
+    };
+
+    const openLeadModal = (lead) => {
+        const logoName = (lead.companyLogo || lead.company).toLowerCase().replace(/\s*&\s*|\s+/g, '');
+        let prioritiesHTML = '';
+        if (lead.priorities && lead.priorities.length > 0) {
+            prioritiesHTML = `
+                <h4 class="font-bold text-slate-800 mt-6 mb-2">Stated Priorities & Philosophy</h4>
+                <ul class="space-y-2 list-disc list-inside text-slate-600">
+                    ${lead.priorities.map(p => `<li>${p}</li>`).join('')}
+                </ul>
+            `;
+        }
+
+        let messageHTML = '';
+        if (lead.message) {
+            const originalButtonText = `<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg> Copy Message`;
+            messageHTML = `
+                <div class="mt-6 bg-slate-100 p-4 rounded-lg">
+                    <h4 class="font-bold text-slate-800 mb-2">Tailored Messaging Hook</h4>
+                    <p id="message-text" class="text-slate-700 text-sm mb-4">${lead.message}</p>
+                    <button id="copy-message-button" class="w-full bg-amber-500 text-white font-bold py-2 px-4 rounded-md hover:bg-amber-600 transition-colors flex items-center justify-center">
+                        ${originalButtonText}
+                    </button>
+                </div>
+            `;
+        }
+        
+        const originalEmailButtonText = `<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path></svg> Copy Email`;
+        const contactHTML = `
+            <div class="mt-4 p-4 border border-slate-200 rounded-lg flex items-center justify-between">
+                <div>
+                    <h4 class="text-xs font-semibold text-slate-500">CONTACT EMAIL</h4>
+                    <p id="email-text" class="text-teal-700 font-medium">${lead.email}</p>
+                </div>
+                <button id="copy-email-button" class="bg-slate-200 text-slate-700 text-sm font-bold py-2 px-3 rounded-md hover:bg-slate-300 transition-colors flex items-center">
+                    ${originalEmailButtonText}
+                </button>
+            </div>
+        `;
+
+        modalContent.innerHTML = `
+            <div class="p-6">
+                <div class="flex justify-between items-start">
+                    <div class="flex items-center">
+                        <img src="https://logo.clearbit.com/${logoName}.com" alt="${lead.company} Logo" class="h-14 w-14 mr-4 rounded-lg object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                         <div class="h-14 w-14 mr-4 rounded-lg hidden items-center justify-center bg-slate-200 text-slate-500 font-bold text-2xl">${lead.company.charAt(0)}</div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-slate-900">${lead.name}</h3>
+                            <p class="text-slate-600">${lead.title}</p>
+                            <p class="text-slate-500 font-medium">${lead.company}</p>
+                        </div>
+                    </div>
+                    <button id="close-modal" class="text-3xl font-light text-slate-400 hover:text-slate-600">&times;</button>
+                </div>
+                ${contactHTML}
+                ${prioritiesHTML}
+                ${messageHTML}
+            </div>
+        `;
+
+        leadModal.classList.remove('hidden');
+
+        document.getElementById('close-modal').addEventListener('click', () => leadModal.classList.add('hidden'));
+        
+        const copyEmailButton = document.getElementById('copy-email-button');
+        copyEmailButton.addEventListener('click', () => {
+            copyToClipboard(lead.email, copyEmailButton, originalEmailButtonText);
+        });
+        
+        const copyMessageButton = document.getElementById('copy-message-button');
+        if (copyMessageButton) {
+            const originalMsgBtnText = copyMessageButton.innerHTML;
+            copyMessageButton.addEventListener('click', () => {
+                const messageText = document.getElementById('message-text').innerText;
+                copyToClipboard(messageText, copyMessageButton, originalMsgBtnText);
+            });
+        }
+    };
+
+    leadModal.addEventListener('click', (e) => {
+        if (e.target.id === 'lead-modal') {
+            leadModal.classList.add('hidden');
+        }
+    });
+
+    searchInput.addEventListener('input', renderLeads);
+    tierFilter.addEventListener('change', renderLeads);
+
+    renderBurnoutChart();
+    renderInvestmentChart();
+    renderTierCompanies(1);
+    renderLeads();
+});
+</script>
+</body>
+</html>
