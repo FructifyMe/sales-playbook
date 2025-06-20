@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Unmind Nova - Interactive Sales Playbook</title>
     <!-- Chosen Palette: "Calm Harmony Neutrals" - A palette using a base of slate and stone neutrals (bg-slate-50, border-slate-200), with a professional and calming muted teal (teal-600/700) as the primary interactive color and a subtle amber (amber-500) for highlights and call-to-actions. This creates a focused, uncluttered, and sophisticated feel appropriate for a corporate strategy tool. -->
-    <!-- Application Structure Plan: The application is structured as a task-oriented, single-page dashboard for a sales representative (JC). The structure avoids the linear format of the source report and instead prioritizes actionability and quick access to key information. It's organized into four logical sections: 1. **Market Pulse Dashboard:** An initial overview of the market opportunity (burnout crisis, investment trends) to provide context. 2. **Target Accounts Funnel:** An interactive, tabbed view of the tiered company lists (Tier 1, 2, 3) to allow for focused prospecting. 3. **Actionable Lead Board:** The core of the app, transforming the static CHRO table into a filterable, searchable grid of interactive cards. Clicking a card reveals a detailed dossier with contact info and a one-click "copy message" function. 4. **GTM Strategy:** A visual timeline of the go-to-market plan. This structure guides the user from high-level understanding to specific, actionable sales tasks, which is far more efficient for a sales workflow than reading a report. -->
+    <!-- Application Structure Plan: The application is structured as a task-oriented, single-page dashboard for a sales representative (JC). The structure avoids the linear format of the source report and instead prioritizes actionability and quick access to key information. It's organized into four logical sections: 1. **Market Pulse Dashboard:** An initial overview of the market opportunity (burnout crisis, investment trends) to provide context. 2. **Target Accounts Funnel:** An interactive, tabbed view of the tiered company lists (Tier 1, 2, 3) to allow for focused prospecting. 3. **Actionable Lead Board:** The core of the app, transforming the static CHRO table into a filterable, searchable grid of interactive cards. Clicking a card reveals a detailed dossier with contact info, a Lusha integration link, and a one-click "copy message" function. 4. **GTM Strategy:** A visual timeline of the go-to-market plan. This structure guides the user from high-level understanding to specific, actionable sales tasks, which is far more efficient for a sales workflow than reading a report. -->
     <!-- Visualization & Content Choices: 
         - Report Info: Burnout rates by industry -> Goal: Compare high-need sectors -> Viz: Horizontal Bar Chart (Chart.js) -> Interaction: Hover for details on burnout drivers -> Justification: Clearly visualizes the hierarchy of need, making prioritization intuitive.
         - Report Info: Corporate wellness market growth projection -> Goal: Show market viability -> Viz: Line Chart (Chart.js) -> Interaction: Tooltips show value at data points -> Justification: Effectively communicates the growing budget allocation in the target market.
         - Report Info: Tiered company lists -> Goal: Organize target accounts -> Presentation: Tabbed interface with company cards -> Interaction: Click tabs to filter tiers -> Justification: Segments the target list cleanly, preventing information overload and allowing the user to focus on one tier at a time.
-        - Report Info: Master CHRO list & Executive Dossiers -> Goal: Enable targeted outreach -> Presentation: Interactive modal with contact info and "copy to clipboard" buttons -> Interaction: Click lead card to open dossier, click buttons to copy email and tailored message -> Justification: This is the primary action-oriented feature. It dramatically reduces friction for the sales rep, moving them from research to outreach in a single click.
+        - Report Info: Master CHRO list & Executive Dossiers -> Goal: Enable targeted outreach -> Presentation: Interactive modal with contact info and "copy to clipboard" buttons, plus a "Search on LinkedIn" button to integrate with Lusha -> Interaction: Click lead card to open dossier, click buttons to copy email/message or to find the contact on LinkedIn for enrichment -> Justification: This is the primary action-oriented feature. It dramatically reduces friction for the sales rep, moving them from research to outreach in a single click.
         - Report Info: Phased GTM plan -> Goal: Outline strategy -> Presentation: Visual timeline (HTML/CSS) -> Interaction: Static visual -> Justification: Transforms a text block into an easily digestible strategic roadmap.
         - Library/Method: All charts use Chart.js (Canvas). All other visuals and layouts use structured HTML and Tailwind CSS. -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
@@ -103,7 +103,7 @@
         <section id="lead-board" class="mb-16 scroll-mt-20">
             <h2 class="text-3xl font-bold text-slate-900 mb-2">Actionable Lead Board</h2>
             <p class="text-slate-600 mb-8 max-w-3xl">
-                This is your central command for outreach. Find specific CHROs using the search and filter controls. Click on any lead to open their detailed dossier, which now includes their contact email, priorities, and a tailored messaging hook.
+                This is your central command for outreach. Find specific CHROs using the search and filter controls. Click any lead to open their dossier, which includes contact info, a tailored messaging hook, and a button to find them on LinkedIn for enrichment with tools like Lusha.
             </p>
             <div class="mb-6 flex flex-col sm:flex-row gap-4">
                  <input type="search" id="search-input" placeholder="Search by name or company..." class="w-full sm:w-1/2 flex-grow px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition">
@@ -591,14 +591,22 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const originalEmailButtonText = `<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path></svg> Copy Email`;
         const contactHTML = `
-            <div class="mt-4 p-4 border border-slate-200 rounded-lg flex items-center justify-between">
-                <div>
-                    <h4 class="text-xs font-semibold text-slate-500">CONTACT EMAIL</h4>
-                    <p id="email-text" class="text-teal-700 font-medium">${lead.email}</p>
+            <div class="mt-4 p-4 border border-slate-200 rounded-lg">
+                <div class="flex items-center justify-between">
+                     <div>
+                        <h4 class="text-xs font-semibold text-slate-500">CONTACT EMAIL</h4>
+                        <p id="email-text" class="text-teal-700 font-medium">${lead.email}</p>
+                    </div>
+                    <button id="copy-email-button" class="bg-slate-200 text-slate-700 text-sm font-bold py-2 px-3 rounded-md hover:bg-slate-300 transition-colors flex items-center">
+                        ${originalEmailButtonText}
+                    </button>
                 </div>
-                <button id="copy-email-button" class="bg-slate-200 text-slate-700 text-sm font-bold py-2 px-3 rounded-md hover:bg-slate-300 transition-colors flex items-center">
-                    ${originalEmailButtonText}
-                </button>
+                <div class="mt-3 pt-3 border-t border-slate-200">
+                    <button id="lusha-button" class="w-full bg-blue-600 text-white text-sm font-bold py-2 px-3 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                        Find on LinkedIn (for Lusha)
+                    </button>
+                </div>
             </div>
         `;
 
@@ -626,9 +634,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('close-modal').addEventListener('click', () => leadModal.classList.add('hidden'));
         
-        const copyEmailButton = document.getElementById('copy-email-button');
-        copyEmailButton.addEventListener('click', () => {
-            copyToClipboard(lead.email, copyEmailButton, originalEmailButtonText);
+        document.getElementById('copy-email-button').addEventListener('click', () => {
+            copyToClipboard(lead.email, document.getElementById('copy-email-button'), originalEmailButtonText);
+        });
+
+        document.getElementById('lusha-button').addEventListener('click', () => {
+            const searchUrl = `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(lead.name + ' ' + lead.company)}`;
+            window.open(searchUrl, '_blank');
         });
         
         const copyMessageButton = document.getElementById('copy-message-button');
